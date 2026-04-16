@@ -29,6 +29,12 @@ enum Status {
   OVERDUE
 }
 
+enum ReceiptStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id               String            @id @default(uuid())
   email            String            @unique
@@ -39,6 +45,7 @@ model User {
   updatedAt        DateTime          @updatedAt
   adminProfile     AdminProfile?
   passengerProfile PassengerProfile?
+  receiptsReviewed Receipt[]
 }
 
 model AdminProfile {
@@ -92,6 +99,22 @@ model MonthlyFee {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   passenger      PassengerProfile @relation(fields: [passengerId], references: [id], onDelete: Cascade)
+  receipts       Receipt[]
 
   @@unique([passengerId, referenceMonth])
+}
+
+model Receipt {
+  id              String        @id @default(uuid())
+  monthlyFeeId    String
+  fileUrl         String
+  fileType        String
+  status          ReceiptStatus @default(PENDING)
+  rejectionReason String?
+  adminNotes      String?
+  uploadedAt      DateTime      @default(now())
+  analyzedAt      DateTime?
+  analyzedBy      String?
+  monthlyFee      MonthlyFee    @relation(fields: [monthlyFeeId], references: [id], onDelete: Cascade)
+  analyzedByUser  User?         @relation(fields: [analyzedBy], references: [id], onDelete: SetNull)
 }

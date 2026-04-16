@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Building2, Users, Wallet } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, Wallet, FileCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useAuth } from '@/providers/auth-provider';
@@ -13,6 +13,7 @@ const adminNavItems = [
   { href: '/admin/passengers', label: 'Passengers', icon: Users },
   { href: '/admin/institutions', label: 'Institutions', icon: Building2 },
   { href: '/admin/monthly-fees', label: 'Monthly Fees', icon: Wallet },
+  { href: '/admin/receipts', label: 'Receipts', icon: FileCheck },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

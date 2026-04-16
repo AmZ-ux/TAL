@@ -3,7 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, Status } from '@prisma/client';
+import { Prisma, Role, Status } from '@prisma/client';
+import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListMonthlyFeesQueryDto } from './dto/list-monthly-fees-query.dto';
 import {
@@ -34,7 +35,7 @@ const monthlyFeeSelection = {
 export class MonthlyFeesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(query: ListMonthlyFeesQueryDto) {
+  async findAll(query: ListMonthlyFeesQueryDto, user: JwtPayload) {
     const normalizedMonth = query.month
       ? normalizeReferenceMonth(query.month)
       : undefined;
@@ -43,6 +44,13 @@ export class MonthlyFeesService {
       where: {
         ...(query.passengerId ? { passengerId: query.passengerId } : {}),
         ...(normalizedMonth ? { referenceMonth: normalizedMonth } : {}),
+        ...(user.role === Role.PASSENGER
+          ? {
+              passenger: {
+                userId: user.sub,
+              },
+            }
+          : {}),
       },
       select: monthlyFeeSelection,
       orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],

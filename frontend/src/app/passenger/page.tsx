@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { RouteGuard } from "@/shared/auth/route-guard";
 import { EmptyState } from "@/shared/ui/states/empty-state";
@@ -22,15 +24,17 @@ export default function PassengerPage() {
             <p className="text-sm text-muted-foreground">
               Authenticated as <strong>{user?.email}</strong>. Passenger business modules start in next sprints.
             </p>
-            <Button variant="destructive" className="w-fit" onClick={logout}>
-              Sign out
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/passenger/upload-receipt" className={cn(buttonVariants({ variant: "outline" }), "w-fit")}>
+                Upload receipt
+              </Link>
+              <Button variant="destructive" className="w-fit" onClick={logout}>
+                Sign out
+              </Button>
+            </div>
           </CardContent>
         </Card>
-        <EmptyState
-          title="No passenger modules yet"
-          description="Monthly payment records and statements are not included in Sprint 1."
-        />
+        <EmptyState title="Next step" description="Use the Upload receipt action to send payment proof for analysis." />
       </main>
     </RouteGuard>
   );
