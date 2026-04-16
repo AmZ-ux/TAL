@@ -23,6 +23,12 @@ enum PassengerStatus {
   OVERDUE
 }
 
+enum Status {
+  PENDING
+  PAID
+  OVERDUE
+}
+
 model User {
   id               String            @id @default(uuid())
   email            String            @unique
@@ -61,6 +67,7 @@ model PassengerProfile {
   updatedAt      DateTime        @updatedAt
   user           User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution    Institution     @relation(fields: [institutionId], references: [id])
+  monthlyFees    MonthlyFee[]
 }
 
 model Institution {
@@ -71,4 +78,20 @@ model Institution {
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
   passengers PassengerProfile[]
+}
+
+model MonthlyFee {
+  id             String           @id @default(uuid())
+  passengerId    String
+  referenceMonth String
+  amount         Decimal          @db.Decimal(10, 2)
+  dueDate        DateTime
+  status         Status           @default(PENDING)
+  paymentDate    DateTime?
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  passenger      PassengerProfile @relation(fields: [passengerId], references: [id], onDelete: Cascade)
+
+  @@unique([passengerId, referenceMonth])
 }
