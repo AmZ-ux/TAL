@@ -66,7 +66,10 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token not registered.');
     }
 
-    const tokenMatches = await compare(refreshToken, userWithHash.refreshTokenHash);
+    const tokenMatches = await compare(
+      refreshToken,
+      userWithHash.refreshTokenHash,
+    );
     if (!tokenMatches) {
       throw new UnauthorizedException('Invalid refresh token.');
     }
@@ -104,7 +107,10 @@ export class AuthService {
     ) as SignOptions['expiresIn'];
 
     const accessToken = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>('JWT_ACCESS_SECRET', 'access-secret'),
+      secret: this.configService.get<string>(
+        'JWT_ACCESS_SECRET',
+        'access-secret',
+      ),
       expiresIn: accessExpiresIn,
     });
 

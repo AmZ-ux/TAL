@@ -12,6 +12,17 @@ enum Role {
   PASSENGER
 }
 
+enum InstitutionStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PassengerStatus {
+  PAID
+  PENDING
+  OVERDUE
+}
+
 model User {
   id               String            @id @default(uuid())
   email            String            @unique
@@ -34,11 +45,30 @@ model AdminProfile {
 }
 
 model PassengerProfile {
-  id              String   @id @default(uuid())
-  userId          String   @unique
-  fullName        String
-  registrationId  String?  @unique
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String          @id @default(uuid())
+  userId         String?         @unique
+  fullName       String
+  phone          String
+  email          String?
+  registrationId String?         @unique
+  course         String
+  shift          String
+  boardingPoint  String
+  notes          String?
+  status         PassengerStatus @default(PENDING)
+  institutionId  String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  user           User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution    Institution     @relation(fields: [institutionId], references: [id])
+}
+
+model Institution {
+  id         String            @id @default(uuid())
+  name       String
+  status     InstitutionStatus @default(ACTIVE)
+  notes      String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  passengers PassengerProfile[]
 }

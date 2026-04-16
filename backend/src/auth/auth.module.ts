@@ -19,7 +19,10 @@ import type { SignOptions } from 'jsonwebtoken';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_ACCESS_SECRET', 'access-secret'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m') as SignOptions['expiresIn'],
+          expiresIn: configService.get<string>(
+            'JWT_ACCESS_EXPIRES_IN',
+            '15m',
+          ) as SignOptions['expiresIn'],
         },
       }),
     }),
