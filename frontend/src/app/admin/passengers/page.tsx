@@ -75,49 +75,82 @@ export default function AdminPassengersPage() {
       ) : null}
 
       {!isLoading && !isError && data && data.length > 0 ? (
-        <Card>
-          <CardContent className='overflow-x-auto pt-4'>
-            <table className='min-w-full text-left text-sm'>
-              <thead>
-                <tr className='border-b text-muted-foreground'>
-                  <th className='px-2 py-2 font-medium'>Name</th>
-                  <th className='px-2 py-2 font-medium'>Phone</th>
-                  <th className='px-2 py-2 font-medium'>Institution</th>
-                  <th className='px-2 py-2 font-medium'>Status</th>
-                  <th className='px-2 py-2 font-medium'>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((passenger) => (
-                  <tr key={passenger.id} className='border-b last:border-none'>
-                    <td className='px-2 py-2'>{passenger.fullName}</td>
-                    <td className='px-2 py-2'>{passenger.phone}</td>
-                    <td className='px-2 py-2'>{passenger.institution?.name ?? '-'}</td>
-                    <td className='px-2 py-2'>
-                      <PassengerStatusBadge status={passenger.status} />
-                    </td>
-                    <td className='px-2 py-2'>
-                      <div className='flex flex-wrap gap-2'>
-                        <Link
-                          href={`/admin/passengers/${passenger.id}`}
-                          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-                        >
-                          View details
-                        </Link>
-                        <Link
-                          href={`/admin/passengers/${passenger.id}/edit`}
-                          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-                        >
-                          Edit
-                        </Link>
-                      </div>
-                    </td>
+        <div className='space-y-3'>
+          <div className='space-y-3 md:hidden'>
+            {data.map((passenger) => (
+              <Card key={passenger.id}>
+                <CardContent className='space-y-3 pt-4 text-sm'>
+                  <div className='flex items-start justify-between gap-2'>
+                    <div>
+                      <p className='font-semibold'>{passenger.fullName}</p>
+                      <p className='text-muted-foreground'>{passenger.phone}</p>
+                    </div>
+                    <PassengerStatusBadge status={passenger.status} />
+                  </div>
+                  <p className='text-muted-foreground'>Institution: {passenger.institution?.name ?? '-'}</p>
+                  <div className='grid grid-cols-2 gap-2'>
+                    <Link
+                      href={`/admin/passengers/${passenger.id}`}
+                      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'justify-center')}
+                    >
+                      View details
+                    </Link>
+                    <Link
+                      href={`/admin/passengers/${passenger.id}/edit`}
+                      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'justify-center')}
+                    >
+                      Edit
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Card className='hidden md:block'>
+            <CardContent className='overflow-x-auto pt-4'>
+              <table className='min-w-full text-left text-sm'>
+                <thead>
+                  <tr className='border-b text-muted-foreground'>
+                    <th className='px-2 py-2 font-medium'>Name</th>
+                    <th className='px-2 py-2 font-medium'>Phone</th>
+                    <th className='px-2 py-2 font-medium'>Institution</th>
+                    <th className='px-2 py-2 font-medium'>Status</th>
+                    <th className='px-2 py-2 font-medium'>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+                </thead>
+                <tbody>
+                  {data.map((passenger) => (
+                    <tr key={passenger.id} className='border-b last:border-none'>
+                      <td className='px-2 py-2'>{passenger.fullName}</td>
+                      <td className='px-2 py-2'>{passenger.phone}</td>
+                      <td className='px-2 py-2'>{passenger.institution?.name ?? '-'}</td>
+                      <td className='px-2 py-2'>
+                        <PassengerStatusBadge status={passenger.status} />
+                      </td>
+                      <td className='px-2 py-2'>
+                        <div className='flex flex-wrap gap-2'>
+                          <Link
+                            href={`/admin/passengers/${passenger.id}`}
+                            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                          >
+                            View details
+                          </Link>
+                          <Link
+                            href={`/admin/passengers/${passenger.id}/edit`}
+                            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                          >
+                            Edit
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
       ) : null}
     </section>
   );

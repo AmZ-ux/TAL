@@ -32,7 +32,10 @@ export class MonthlyFeesController {
 
   @Patch(':id/pay')
   @Roles(Role.ADMIN)
-  markAsPaid(@Param('id', ParseUUIDPipe) id: string) {
-    return this.monthlyFeesService.markAsPaid(id);
+  markAsPaid(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.monthlyFeesService.markAsPaid(id, user.sub);
   }
 }

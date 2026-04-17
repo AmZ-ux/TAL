@@ -7,12 +7,14 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RolesGuard } from './guards/roles.guard';
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 import type { SignOptions } from 'jsonwebtoken';
 
 @Module({
   imports: [
     ConfigModule,
     UsersModule,
+    AuditLogsModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],

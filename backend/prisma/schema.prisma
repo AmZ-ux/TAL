@@ -53,6 +53,7 @@ model User {
   passengerProfile PassengerProfile?
   receiptsReviewed Receipt[]
   notifications    Notification[]
+  auditLogs        AuditLog[]
 }
 
 model AdminProfile {
@@ -137,5 +138,20 @@ model Notification {
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, read])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  payload   Json?
+  createdAt DateTime @default(now())
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([action])
   @@index([createdAt])
 }

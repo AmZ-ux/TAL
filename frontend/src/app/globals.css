@@ -122,11 +122,16 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground leading-relaxed;
     background-image: radial-gradient(circle at top left, oklch(0.97 0.03 220), transparent 40%),
       radial-gradient(circle at bottom right, oklch(0.95 0.04 120), transparent 35%);
   }
   html {
-    @apply font-sans;
+    @apply font-sans text-[15px];
+  }
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
   }
 }

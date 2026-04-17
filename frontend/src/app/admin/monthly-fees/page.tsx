@@ -153,45 +153,76 @@ export default function MonthlyFeesPage() {
       ) : null}
 
       {!isLoading && !isError && data && data.length > 0 ? (
-        <Card>
-          <CardContent className='overflow-x-auto pt-4'>
-            <table className='min-w-full text-left text-sm'>
-              <thead>
-                <tr className='border-b text-muted-foreground'>
-                  <th className='px-2 py-2 font-medium'>Passenger</th>
-                  <th className='px-2 py-2 font-medium'>Month</th>
-                  <th className='px-2 py-2 font-medium'>Amount</th>
-                  <th className='px-2 py-2 font-medium'>Due date</th>
-                  <th className='px-2 py-2 font-medium'>Status</th>
-                  <th className='px-2 py-2 font-medium'>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((fee) => (
-                  <tr key={fee.id} className='border-b last:border-none'>
-                    <td className='px-2 py-2'>{fee.passenger.fullName}</td>
-                    <td className='px-2 py-2'>{formatMonth(fee.referenceMonth)}</td>
-                    <td className='px-2 py-2'>{formatCurrency(fee.amount)}</td>
-                    <td className='px-2 py-2'>{formatDate(fee.dueDate)}</td>
-                    <td className='px-2 py-2'>
-                      <MonthlyFeeStatusBadge status={fee.status} />
-                    </td>
-                    <td className='px-2 py-2'>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        disabled={fee.status === 'PAID'}
-                        onClick={() => setSelectedFee(fee)}
-                      >
-                        Mark as paid
-                      </Button>
-                    </td>
+        <div className='space-y-3'>
+          <div className='space-y-3 md:hidden'>
+            {data.map((fee) => (
+              <Card key={fee.id}>
+                <CardContent className='space-y-3 pt-4 text-sm'>
+                  <div className='flex items-start justify-between gap-2'>
+                    <div>
+                      <p className='font-semibold'>{fee.passenger.fullName}</p>
+                      <p className='text-muted-foreground'>{formatMonth(fee.referenceMonth)}</p>
+                    </div>
+                    <MonthlyFeeStatusBadge status={fee.status} />
+                  </div>
+                  <p>
+                    <span className='font-medium'>Amount:</span> {formatCurrency(fee.amount)}
+                  </p>
+                  <p className='text-muted-foreground'>Due date: {formatDate(fee.dueDate)}</p>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className='w-full'
+                    disabled={fee.status === 'PAID'}
+                    onClick={() => setSelectedFee(fee)}
+                  >
+                    Mark as paid
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Card className='hidden md:block'>
+            <CardContent className='overflow-x-auto pt-4'>
+              <table className='min-w-full text-left text-sm'>
+                <thead>
+                  <tr className='border-b text-muted-foreground'>
+                    <th className='px-2 py-2 font-medium'>Passenger</th>
+                    <th className='px-2 py-2 font-medium'>Month</th>
+                    <th className='px-2 py-2 font-medium'>Amount</th>
+                    <th className='px-2 py-2 font-medium'>Due date</th>
+                    <th className='px-2 py-2 font-medium'>Status</th>
+                    <th className='px-2 py-2 font-medium'>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+                </thead>
+                <tbody>
+                  {data.map((fee) => (
+                    <tr key={fee.id} className='border-b last:border-none'>
+                      <td className='px-2 py-2'>{fee.passenger.fullName}</td>
+                      <td className='px-2 py-2'>{formatMonth(fee.referenceMonth)}</td>
+                      <td className='px-2 py-2'>{formatCurrency(fee.amount)}</td>
+                      <td className='px-2 py-2'>{formatDate(fee.dueDate)}</td>
+                      <td className='px-2 py-2'>
+                        <MonthlyFeeStatusBadge status={fee.status} />
+                      </td>
+                      <td className='px-2 py-2'>
+                        <Button
+                          size='sm'
+                          variant='outline'
+                          disabled={fee.status === 'PAID'}
+                          onClick={() => setSelectedFee(fee)}
+                        >
+                          Mark as paid
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
       ) : null}
 
       <Dialog open={!!selectedFee} onOpenChange={(open) => (!open ? setSelectedFee(null) : null)}>

@@ -45,11 +45,11 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md shadow-lg">
+    <Card className="w-full max-w-md border-2 border-primary/10 shadow-lg">
       <CardHeader>
-        <Badge variant="secondary" className="w-fit">Sprint 1</Badge>
-        <CardTitle className="mt-2">Sign in</CardTitle>
-        <CardDescription>Access the transportation payment management portal.</CardDescription>
+        <Badge variant="secondary" className="w-fit">Secure access</Badge>
+        <CardTitle className="mt-2 text-2xl">Sign in</CardTitle>
+        <CardDescription>Use your account to access payments, receipts, and monthly fee tracking.</CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>

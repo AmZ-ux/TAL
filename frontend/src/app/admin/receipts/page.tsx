@@ -133,41 +133,63 @@ export default function AdminReceiptsPage() {
       ) : null}
 
       {!receiptsQuery.isLoading && !receiptsQuery.isError && (receiptsQuery.data?.length ?? 0) > 0 ? (
-        <Card>
-          <CardContent className='overflow-x-auto pt-4'>
-            <table className='min-w-full text-left text-sm'>
-              <thead>
-                <tr className='border-b text-muted-foreground'>
-                  <th className='px-2 py-2 font-medium'>Passenger</th>
-                  <th className='px-2 py-2 font-medium'>Month</th>
-                  <th className='px-2 py-2 font-medium'>Status</th>
-                  <th className='px-2 py-2 font-medium'>Upload date</th>
-                  <th className='px-2 py-2 font-medium'>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {receiptsQuery.data?.map((receipt) => (
-                  <tr
-                    key={receipt.id}
-                    className={`border-b last:border-none ${receipt.status === 'PENDING' ? 'bg-chart-5/10' : ''}`}
-                  >
-                    <td className='px-2 py-2'>{receipt.monthlyFee.passenger.fullName}</td>
-                    <td className='px-2 py-2'>{formatMonth(receipt.monthlyFee.referenceMonth)}</td>
-                    <td className='px-2 py-2'>
-                      <ReceiptStatusBadge status={receipt.status} />
-                    </td>
-                    <td className='px-2 py-2'>{formatDate(receipt.uploadedAt)}</td>
-                    <td className='px-2 py-2'>
-                      <Button size='sm' variant='outline' onClick={() => setSelectedReceipt(receipt)}>
-                        View
-                      </Button>
-                    </td>
+        <div className='space-y-3'>
+          <div className='space-y-3 md:hidden'>
+            {receiptsQuery.data?.map((receipt) => (
+              <Card key={receipt.id} className={receipt.status === 'PENDING' ? 'bg-chart-5/10' : ''}>
+                <CardContent className='space-y-3 pt-4 text-sm'>
+                  <div className='flex items-start justify-between gap-2'>
+                    <div>
+                      <p className='font-semibold'>{receipt.monthlyFee.passenger.fullName}</p>
+                      <p className='text-muted-foreground'>{formatMonth(receipt.monthlyFee.referenceMonth)}</p>
+                    </div>
+                    <ReceiptStatusBadge status={receipt.status} />
+                  </div>
+                  <p className='text-muted-foreground'>Uploaded on {formatDate(receipt.uploadedAt)}</p>
+                  <Button size='sm' variant='outline' className='w-full' onClick={() => setSelectedReceipt(receipt)}>
+                    View receipt
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Card className='hidden md:block'>
+            <CardContent className='overflow-x-auto pt-4'>
+              <table className='min-w-full text-left text-sm'>
+                <thead>
+                  <tr className='border-b text-muted-foreground'>
+                    <th className='px-2 py-2 font-medium'>Passenger</th>
+                    <th className='px-2 py-2 font-medium'>Month</th>
+                    <th className='px-2 py-2 font-medium'>Status</th>
+                    <th className='px-2 py-2 font-medium'>Upload date</th>
+                    <th className='px-2 py-2 font-medium'>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+                </thead>
+                <tbody>
+                  {receiptsQuery.data?.map((receipt) => (
+                    <tr
+                      key={receipt.id}
+                      className={`border-b last:border-none ${receipt.status === 'PENDING' ? 'bg-chart-5/10' : ''}`}
+                    >
+                      <td className='px-2 py-2'>{receipt.monthlyFee.passenger.fullName}</td>
+                      <td className='px-2 py-2'>{formatMonth(receipt.monthlyFee.referenceMonth)}</td>
+                      <td className='px-2 py-2'>
+                        <ReceiptStatusBadge status={receipt.status} />
+                      </td>
+                      <td className='px-2 py-2'>{formatDate(receipt.uploadedAt)}</td>
+                      <td className='px-2 py-2'>
+                        <Button size='sm' variant='outline' onClick={() => setSelectedReceipt(receipt)}>
+                          View
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
       ) : null}
 
       <Dialog

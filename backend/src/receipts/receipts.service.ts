@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, ReceiptStatus, Role, Status } from '@prisma/client';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { ApproveReceiptDto } from './dto/approve-receipt.dto';
@@ -50,7 +51,10 @@ const receiptSelection = {
 
 @Injectable()
 export class ReceiptsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditLogsService: AuditLogsService,
+  ) {}
 
   async create(dto: CreateReceiptDto, user: JwtPayload) {
     const monthlyFee = await this.prisma.monthlyFee.findUnique({
@@ -163,6 +167,17 @@ export class ReceiptsService {
       }),
     ]);
 
+    await this.auditLogsService.createLog({
+      actorId: adminId,
+      action: 'RECEIPT_APPROVED',
+      entity: 'Receipt',
+      entityId: updatedReceipt.id,
+      payload: {
+        monthlyFeeId: updatedReceipt.monthlyFeeId,
+        analyzedAt: updatedReceipt.analyzedAt?.toISOString() ?? null,
+      },
+    });
+
     return updatedReceipt;
   }
 
@@ -183,7 +198,7 @@ export class ReceiptsService {
       throw new BadRequestException('Only pending receipts can be rejected.');
     }
 
-    return this.prisma.receipt.update({
+    const updatedReceipt = await this.prisma.receipt.update({
       where: { id },
       data: {
         status: ReceiptStatus.REJECTED,
@@ -194,5 +209,18 @@ export class ReceiptsService {
       },
       select: receiptSelection,
     });
+
+    await this.auditLogsService.createLog({
+      actorId: adminId,
+      action: 'RECEIPT_REJECTED',
+      entity: 'Receipt',
+      entityId: updatedReceipt.id,
+      payload: {
+        monthlyFeeId: updatedReceipt.monthlyFeeId,
+        reason: updatedReceipt.rejectionReason,
+      },
+    });
+
+    return updatedReceipt;
   }
 }

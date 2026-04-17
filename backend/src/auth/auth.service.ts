@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { compare, hash } from 'bcrypt';
 import { UsersService } from '../users/users.service';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import type { SignOptions } from 'jsonwebtoken';
@@ -13,6 +14,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly auditLogsService: AuditLogsService,
   ) {}
 
   async login(dto: LoginDto) {
@@ -34,8 +36,19 @@ export class AuthService {
 
     await this.usersService.updateRefreshTokenHash(
       user.id,
-      await hash(tokens.refreshToken, 10),
+      await hash(tokens.refreshToken, 12),
     );
+
+    await this.auditLogsService.createLog({
+      actorId: user.id,
+      action: 'AUTH_LOGIN',
+      entity: 'User',
+      entityId: user.id,
+      payload: {
+        email: user.email,
+        role: user.role,
+      },
+    });
 
     return {
       ...tokens,
@@ -51,8 +64,13 @@ export class AuthService {
           'JWT_REFRESH_SECRET',
           'refresh-secret',
         ),
+        issuer: 'transport-payments-api',
       });
     } catch {
+      throw new UnauthorizedException('Invalid refresh token.');
+    }
+
+    if (payload.tokenType !== 'refresh') {
       throw new UnauthorizedException('Invalid refresh token.');
     }
 
@@ -82,7 +100,7 @@ export class AuthService {
 
     await this.usersService.updateRefreshTokenHash(
       user.id,
-      await hash(tokens.refreshToken, 10),
+      await hash(tokens.refreshToken, 12),
     );
 
     return {
@@ -106,22 +124,32 @@ export class AuthService {
       '7d',
     ) as SignOptions['expiresIn'];
 
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>(
-        'JWT_ACCESS_SECRET',
-        'access-secret',
-      ),
-      expiresIn: accessExpiresIn,
-    });
+    const refreshToken = await this.jwtService.signAsync(
+      { ...payload, tokenType: 'refresh' as const },
+      {
+        secret: this.configService.get<string>(
+          'JWT_REFRESH_SECRET',
+          'refresh-secret',
+        ),
+        expiresIn: refreshExpiresIn,
+        subject: payload.sub,
+        issuer: 'transport-payments-api',
+      },
+    );
 
-    const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>(
-        'JWT_REFRESH_SECRET',
-        'refresh-secret',
-      ),
-      expiresIn: refreshExpiresIn,
-    });
+    const accessWithType = await this.jwtService.signAsync(
+      { ...payload, tokenType: 'access' as const },
+      {
+        secret: this.configService.get<string>(
+          'JWT_ACCESS_SECRET',
+          'access-secret',
+        ),
+        expiresIn: accessExpiresIn,
+        subject: payload.sub,
+        issuer: 'transport-payments-api',
+      },
+    );
 
-    return { accessToken, refreshToken };
+    return { accessToken: accessWithType, refreshToken };
   }
 }

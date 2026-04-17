@@ -14,12 +14,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         'JWT_ACCESS_SECRET',
         'access-secret',
       ),
+      issuer: 'transport-payments-api',
     });
   }
 
   validate(payload: JwtPayload) {
     if (!payload?.sub || !payload?.email || !payload?.role) {
       throw new UnauthorizedException('Invalid token payload.');
+    }
+
+    if (payload.tokenType && payload.tokenType !== 'access') {
+      throw new UnauthorizedException('Invalid access token.');
     }
 
     return {

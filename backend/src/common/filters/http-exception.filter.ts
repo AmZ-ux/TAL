@@ -21,6 +21,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const exceptionResponse =
       exception instanceof HttpException ? exception.getResponse() : null;
+    const isProduction = process.env.NODE_ENV === 'production';
     const message =
       typeof exceptionResponse === 'string'
         ? exceptionResponse
@@ -29,7 +30,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     response.status(status).json({
       statusCode: status,
-      message,
+      message:
+        status >= HttpStatus.INTERNAL_SERVER_ERROR && isProduction
+          ? 'Unexpected error.'
+          : message,
       path: request.url,
       timestamp: new Date().toISOString(),
     });

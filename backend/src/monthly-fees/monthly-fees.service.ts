@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, Role, Status } from '@prisma/client';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListMonthlyFeesQueryDto } from './dto/list-monthly-fees-query.dto';
@@ -33,7 +34,10 @@ const monthlyFeeSelection = {
 
 @Injectable()
 export class MonthlyFeesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditLogsService: AuditLogsService,
+  ) {}
 
   async findAll(query: ListMonthlyFeesQueryDto, user: JwtPayload) {
     const normalizedMonth = query.month
@@ -92,7 +96,7 @@ export class MonthlyFeesService {
     return feesWithComputedStatus.filter((fee) => fee.status === query.status);
   }
 
-  async markAsPaid(id: string) {
+  async markAsPaid(id: string, actorId: string) {
     const monthlyFee = await this.prisma.monthlyFee.findUnique({
       where: { id },
       select: monthlyFeeSelection,
@@ -111,7 +115,7 @@ export class MonthlyFeesService {
       throw new BadRequestException('Monthly fee is already paid.');
     }
 
-    return this.prisma.monthlyFee.update({
+    const updated = await this.prisma.monthlyFee.update({
       where: { id },
       data: {
         status: Status.PAID,
@@ -119,5 +123,20 @@ export class MonthlyFeesService {
       },
       select: monthlyFeeSelection,
     });
+
+    await this.auditLogsService.createLog({
+      actorId,
+      action: 'MONTHLY_FEE_MARKED_PAID',
+      entity: 'MonthlyFee',
+      entityId: updated.id,
+      payload: {
+        passengerId: updated.passengerId,
+        referenceMonth: updated.referenceMonth,
+        status: updated.status,
+        paymentDate: updated.paymentDate?.toISOString() ?? null,
+      },
+    });
+
+    return updated;
   }
 }

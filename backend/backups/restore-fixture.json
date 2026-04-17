@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "generatedAt": "2026-04-17T03:56:42.137Z",
+    "mode": "fixture"
+  },
+  "data": {
+    "users": [],
+    "adminProfiles": [],
+    "institutions": [],
+    "passengers": [],
+    "monthlyFees": [],
+    "receipts": [],
+    "notifications": [],
+    "auditLogs": []
+  }
+}
