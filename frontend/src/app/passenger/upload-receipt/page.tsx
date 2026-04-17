@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { fetchMonthlyFees } from '@/features/monthly-fees/api/monthly-fees';
@@ -12,7 +13,6 @@ import {
   type CreateReceiptInput,
 } from '@/features/receipts/api/receipts';
 import { ReceiptStatusBadge } from '@/features/receipts/components/receipt-status-badge';
-import { RouteGuard } from '@/shared/auth/route-guard';
 import { FormField, SelectInput } from '@/shared/ui/form/form-field';
 import { EmptyState } from '@/shared/ui/states/empty-state';
 import { ErrorState } from '@/shared/ui/states/error-state';
@@ -48,6 +48,7 @@ function formatDate(dateIso: string) {
 }
 
 export default function UploadReceiptPage() {
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [monthlyFeeId, setMonthlyFeeId] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -67,6 +68,18 @@ export default function UploadReceiptPage() {
     () => (feesQuery.data ?? []).filter((fee) => fee.status !== 'PAID'),
     [feesQuery.data],
   );
+
+  useEffect(() => {
+    const monthlyFeeIdFromQuery = searchParams.get('monthlyFeeId');
+    if (!monthlyFeeIdFromQuery || availableFees.length === 0) {
+      return;
+    }
+
+    const hasMatchingFee = availableFees.some((fee) => fee.id === monthlyFeeIdFromQuery);
+    if (hasMatchingFee) {
+      setMonthlyFeeId(monthlyFeeIdFromQuery);
+    }
+  }, [availableFees, searchParams]);
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
@@ -127,99 +140,102 @@ export default function UploadReceiptPage() {
   };
 
   return (
-    <RouteGuard allowRole='PASSENGER'>
-      <main className='mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-4 px-4 py-8'>
-        <Card>
-          <CardHeader>
-            <CardTitle>Upload Receipt</CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            {feesQuery.isLoading ? <LoadingState label='Loading monthly fees...' /> : null}
-            {feesQuery.isError ? <ErrorState message='Could not load monthly fees.' /> : null}
+    <section className='space-y-4'>
+      <div>
+        <h1 className='text-xl font-semibold'>Upload Receipt</h1>
+        <p className='text-sm text-muted-foreground'>Select the month and send your payment receipt.</p>
+      </div>
 
-            {!feesQuery.isLoading && !feesQuery.isError ? (
-              <>
-                <FormField id='monthlyFeeId' label='Monthly fee' required>
-                  <SelectInput
-                    id='monthlyFeeId'
-                    value={monthlyFeeId}
-                    onChange={(event) => setMonthlyFeeId(event.target.value)}
-                  >
-                    <option value=''>Select monthly fee</option>
-                    {availableFees.map((fee) => (
-                      <option key={fee.id} value={fee.id}>
-                        {formatMonth(fee.referenceMonth)} - due {formatDate(fee.dueDate)}
-                      </option>
-                    ))}
-                  </SelectInput>
-                </FormField>
+      <Card>
+        <CardHeader>
+          <CardTitle>New receipt</CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          {feesQuery.isLoading ? <LoadingState label='Loading monthly fees...' /> : null}
+          {feesQuery.isError ? <ErrorState message='Could not load monthly fees.' /> : null}
 
-                <FormField id='receiptFile' label='Receipt file (image or PDF)' required>
-                  <input
-                    id='receiptFile'
-                    type='file'
-                    accept='image/jpeg,image/jpg,image/png,image/webp,application/pdf'
-                    onChange={onFileChange}
-                    className='block w-full text-sm'
-                  />
-                  <p className='text-xs text-muted-foreground'>Maximum file size: 5MB.</p>
-                </FormField>
-
-                {previewUrl ? (
-                  <div className='space-y-2 rounded-lg border p-3'>
-                    <p className='text-sm font-medium'>Preview</p>
-                    {file?.type === 'application/pdf' ? (
-                      <iframe src={previewUrl} title='Receipt preview' className='h-72 w-full rounded-md border' />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={previewUrl} alt='Receipt preview' className='max-h-72 rounded-md border object-contain' />
-                    )}
-                  </div>
-                ) : null}
-
-                <Button
-                  onClick={() => uploadMutation.mutate()}
-                  disabled={uploadMutation.isPending || !file || !monthlyFeeId}
+          {!feesQuery.isLoading && !feesQuery.isError ? (
+            <>
+              <FormField id='monthlyFeeId' label='Monthly fee' required>
+                <SelectInput
+                  id='monthlyFeeId'
+                  value={monthlyFeeId}
+                  onChange={(event) => setMonthlyFeeId(event.target.value)}
                 >
-                  {uploadMutation.isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : null}
-                  Submit receipt
-                </Button>
-              </>
-            ) : null}
-          </CardContent>
-        </Card>
+                  <option value=''>Select monthly fee</option>
+                  {availableFees.map((fee) => (
+                    <option key={fee.id} value={fee.id}>
+                      {formatMonth(fee.referenceMonth)} - due {formatDate(fee.dueDate)}
+                    </option>
+                  ))}
+                </SelectInput>
+              </FormField>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Your receipts</CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-3'>
-            {receiptsQuery.isLoading ? <LoadingState label='Loading receipts...' /> : null}
-            {receiptsQuery.isError ? <ErrorState message='Could not load receipts.' /> : null}
-            {!receiptsQuery.isLoading && !receiptsQuery.isError && (receiptsQuery.data?.length ?? 0) === 0 ? (
-              <EmptyState title='No receipts uploaded' description='Upload your first receipt to start review.' />
-            ) : null}
+              <FormField id='receiptFile' label='Receipt file (image or PDF)' required>
+                <input
+                  id='receiptFile'
+                  type='file'
+                  accept='image/jpeg,image/jpg,image/png,image/webp,application/pdf'
+                  onChange={onFileChange}
+                  className='block w-full text-sm'
+                />
+                <p className='text-xs text-muted-foreground'>Maximum file size: 5MB.</p>
+              </FormField>
 
-            {!receiptsQuery.isLoading && !receiptsQuery.isError && (receiptsQuery.data?.length ?? 0) > 0 ? (
-              <div className='space-y-2'>
-                {receiptsQuery.data?.map((receipt) => (
-                  <div key={receipt.id} className='rounded-lg border p-3 text-sm'>
-                    <div className='flex flex-wrap items-center justify-between gap-2'>
-                      <p className='font-medium'>Month {formatMonth(receipt.monthlyFee.referenceMonth)}</p>
-                      <ReceiptStatusBadge status={receipt.status} />
-                    </div>
-                    <p className='mt-1 text-muted-foreground'>Uploaded at {formatDate(receipt.uploadedAt)}</p>
-                    {receipt.adminNotes ? <p className='mt-2'>Admin notes: {receipt.adminNotes}</p> : null}
-                    {receipt.rejectionReason ? (
-                      <p className='mt-1 text-destructive'>Rejection reason: {receipt.rejectionReason}</p>
-                    ) : null}
+              {previewUrl ? (
+                <div className='space-y-2 rounded-lg border p-3'>
+                  <p className='text-sm font-medium'>Preview</p>
+                  {file?.type === 'application/pdf' ? (
+                    <iframe src={previewUrl} title='Receipt preview' className='h-72 w-full rounded-md border' />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={previewUrl} alt='Receipt preview' className='max-h-72 rounded-md border object-contain' />
+                  )}
+                </div>
+              ) : null}
+
+              <Button
+                onClick={() => uploadMutation.mutate()}
+                disabled={uploadMutation.isPending || !file || !monthlyFeeId}
+              >
+                {uploadMutation.isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : null}
+                Submit receipt
+              </Button>
+            </>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Your receipts</CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-3'>
+          {receiptsQuery.isLoading ? <LoadingState label='Loading receipts...' /> : null}
+          {receiptsQuery.isError ? <ErrorState message='Could not load receipts.' /> : null}
+          {!receiptsQuery.isLoading && !receiptsQuery.isError && (receiptsQuery.data?.length ?? 0) === 0 ? (
+            <EmptyState title='No receipts uploaded' description='Upload your first receipt to start review.' />
+          ) : null}
+
+          {!receiptsQuery.isLoading && !receiptsQuery.isError && (receiptsQuery.data?.length ?? 0) > 0 ? (
+            <div className='space-y-2'>
+              {receiptsQuery.data?.map((receipt) => (
+                <div key={receipt.id} className='rounded-lg border p-3 text-sm'>
+                  <div className='flex flex-wrap items-center justify-between gap-2'>
+                    <p className='font-medium'>Month {formatMonth(receipt.monthlyFee.referenceMonth)}</p>
+                    <ReceiptStatusBadge status={receipt.status} />
                   </div>
-                ))}
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      </main>
-    </RouteGuard>
+                  <p className='mt-1 text-muted-foreground'>Uploaded at {formatDate(receipt.uploadedAt)}</p>
+                  {receipt.adminNotes ? <p className='mt-2'>Admin notes: {receipt.adminNotes}</p> : null}
+                  {receipt.rejectionReason ? (
+                    <p className='mt-1 text-destructive'>Rejection reason: {receipt.rejectionReason}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+    </section>
   );
 }
