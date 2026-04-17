@@ -35,6 +35,12 @@ enum ReceiptStatus {
   REJECTED
 }
 
+enum NotificationType {
+  REMINDER
+  CHARGE
+  SYSTEM
+}
+
 model User {
   id               String            @id @default(uuid())
   email            String            @unique
@@ -46,6 +52,7 @@ model User {
   adminProfile     AdminProfile?
   passengerProfile PassengerProfile?
   receiptsReviewed Receipt[]
+  notifications    Notification[]
 }
 
 model AdminProfile {
@@ -117,4 +124,18 @@ model Receipt {
   analyzedBy      String?
   monthlyFee      MonthlyFee    @relation(fields: [monthlyFeeId], references: [id], onDelete: Cascade)
   analyzedByUser  User?         @relation(fields: [analyzedBy], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
 }
